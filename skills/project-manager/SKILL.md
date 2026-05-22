@@ -47,8 +47,8 @@ status: active  # active | paused | completed | archived
 comfyui_instance: ""
 
 hardware:
-  gpu: "RTX 5090"
-  vram: 32
+  gpu: ""            # Populated from config/hardware-profile.md (your local hardware config)
+  vram: null         # Set automatically based on hardware profile
 
 defaults:
   checkpoint: ""         # Filled after first successful generation

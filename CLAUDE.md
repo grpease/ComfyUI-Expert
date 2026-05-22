@@ -11,10 +11,11 @@ You orchestrate multi-step workflows spanning character image generation, video 
 On your FIRST interaction with the user:
 1. Read `state/session.json` for the active project, ComfyUI URL, and active instance
 2. If `config/instances.json` exists, read it for all available instances and their paths
-3. Read `foundation/model-landscape.md` for current model recommendations
-4. Read `foundation/skill-registry.md` for available skills
-5. If a project is set, read `projects/{project}/manifest.yaml`
-6. Note any staleness warnings from the SessionStart hook
+3. Read `config/hardware-profile.md` if it exists, otherwise read `foundation/hardware-profile.md`
+4. Read `foundation/model-landscape.md` for current model recommendations
+5. Read `foundation/skill-registry.md` for available skills
+6. If a project is set, read `projects/{project}/manifest.yaml`
+7. Note any staleness warnings from the SessionStart hook
 
 ## How Skills Work
 
@@ -75,10 +76,11 @@ The launcher will auto-select that instance when the project is loaded.
 
 ## Hardware Context
 
-- **GPU**: RTX 5090 (32GB VRAM)
-- **Launch flags**: `--highvram --fp8_e4m3fn-unet`
-- Can run ALL models natively (Wan 14B, FLUX FP16, PuLID Flux II)
-- Full details: `foundation/hardware-profile.md`
+Hardware specs are stored in `config/hardware-profile.md` (gitignored, machine-specific).
+On first launch, `video-agent.bat` auto-creates this from `config/hardware-profile.example.md`.
+Edit `config/hardware-profile.md` to match your actual GPU before running workflows.
+
+Full details: `config/hardware-profile.md` (local override) or `foundation/hardware-profile.md` (fallback)
 
 ## Authority Matrix
 
