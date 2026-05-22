@@ -50,7 +50,17 @@ curl http://127.0.0.1:8188/models/diffusion_models
 
 When ComfyUI isn't running, scan the filesystem directly.
 
-**Requires**: ComfyUI installation path (e.g., `C:\ComfyUI`)
+**Requires**: ComfyUI installation path from `config/instances.json` (for the active instance) or provided explicitly.
+
+**Scan command (named instance):**
+```powershell
+pwsh -File scripts/scan-inventory.ps1 -Instance main
+```
+
+**Scan command (explicit path):**
+```powershell
+pwsh -File scripts/scan-inventory.ps1 -ComfyUIPath "E:\ComfyUI"
+```
 
 **Scan directories:**
 ```
@@ -74,12 +84,16 @@ When ComfyUI isn't running, scan the filesystem directly.
 
 ## Cache Format
 
-Save results to `state/inventory.json`:
+Save results to `state/inventory-{instance}.json` (e.g., `state/inventory-main.json`).
+Fall back to `state/inventory.json` when no instance name is available.
+
+The `instance` field in the JSON identifies which ComfyUI install was scanned:
 
 ```json
 {
   "last_updated": "2026-02-06T12:00:00Z",
   "mode": "online",
+  "instance": "main",
   "comfyui_version": "0.3.10",
   "system": {
     "gpu": "NVIDIA RTX 5090",
@@ -147,7 +161,9 @@ For each model reference:
 
 - Cache is valid for **1 hour** during active sessions
 - Invalidate cache when user installs new models/nodes
-- Force refresh: `scan-inventory.ps1` or API re-query
+- Force refresh: `pwsh -File scripts/scan-inventory.ps1 -Instance <name>` or API re-query
+- Each ComfyUI instance has its own inventory file (`state/inventory-{instance}.json`)
+- When switching instances, the agent reads the corresponding inventory file
 
 ## Integration
 

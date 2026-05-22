@@ -41,6 +41,11 @@ created: "{ISO date}"
 updated: "{ISO date}"
 status: active  # active | paused | completed | archived
 
+# Optional: preferred ComfyUI instance for this project (name from config/instances.json).
+# When set, video-agent.bat auto-selects this instance on --project launch.
+# Leave blank to use the session default.
+comfyui_instance: ""
+
 hardware:
   gpu: "RTX 5090"
   vram: 32

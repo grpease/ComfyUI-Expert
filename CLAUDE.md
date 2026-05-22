@@ -9,11 +9,12 @@ You orchestrate multi-step workflows spanning character image generation, video 
 ## Session Startup
 
 On your FIRST interaction with the user:
-1. Read `state/session.json` for the active project and ComfyUI URL
-2. Read `foundation/model-landscape.md` for current model recommendations
-3. Read `foundation/skill-registry.md` for available skills
-4. If a project is set, read `projects/{project}/manifest.yaml`
-5. Note any staleness warnings from the SessionStart hook
+1. Read `state/session.json` for the active project, ComfyUI URL, and active instance
+2. If `config/instances.json` exists, read it for all available instances and their paths
+3. Read `foundation/model-landscape.md` for current model recommendations
+4. Read `foundation/skill-registry.md` for available skills
+5. If a project is set, read `projects/{project}/manifest.yaml`
+6. Note any staleness warnings from the SessionStart hook
 
 ## How Skills Work
 
@@ -46,10 +47,31 @@ When the user makes a request, route to the right skill file:
 ## Critical Rule: Always Check Inventory First
 
 Before generating ANY workflow:
-1. Read `state/inventory.json` (if it exists)
-2. If it doesn't exist or is stale, tell the user to run: `pwsh -File scripts/scan-inventory.ps1 -ComfyUIPath "C:\ComfyUI"` (or query the API via `skills/comfyui-api/SKILL.md`)
-3. Validate every model and node in your workflow exists in inventory
-4. If something is missing, say what to download and where to put it
+1. Determine the active instance name from `state/session.json` (`active_instance` field)
+2. Read `state/inventory-{active_instance}.json` if it exists; fall back to `state/inventory.json`
+3. If the inventory file doesn't exist or is stale, tell the user to run:
+   - With named instance: `pwsh -File scripts/scan-inventory.ps1 -Instance main`
+   - With explicit path: `pwsh -File scripts/scan-inventory.ps1 -ComfyUIPath "E:\ComfyUI"`
+4. Validate every model and node in your workflow exists in inventory
+5. If something is missing, say what to download and where to put it
+
+## Switching ComfyUI Instances
+
+Instances are defined in `config/instances.json` (copy from `config/instances.example.json`).
+
+To switch instances, restart with the `--instance` flag:
+```
+video-agent.bat --instance experimental
+video-agent.bat --instance experimental --project MyProject
+```
+
+Or override the URL directly:
+```
+video-agent.bat --comfyui http://192.168.1.100:8188
+```
+
+Projects can specify a preferred instance in their `manifest.yaml` (`comfyui_instance` field).
+The launcher will auto-select that instance when the project is loaded.
 
 ## Hardware Context
 
@@ -117,11 +139,12 @@ These global skills (in `~/.claude/skills/`) complement VideoAgent:
 ## File Layout
 
 ```
+config/        Instance configuration (instances.json - gitignored; instances.example.json - template)
 foundation/    Tier 1 - always-available quick reference
 skills/        12 skill instruction files (read on demand)
 references/    Tier 3 - deep reference material (read when directed)
 projects/      Tier 2 - per-project state and character profiles
-state/         Runtime state (inventory.json, session.json)
+state/         Runtime state (inventory-{instance}.json, session.json)
 scripts/       Utility scripts (scan-inventory, connect-comfyui, etc.)
 agent/         AGENT.md (detailed agent spec, read for complex orchestration)
 ```

@@ -1,6 +1,7 @@
 # ComfyUI API Quick Reference
 
-Base URL: `http://127.0.0.1:8188`
+Base URL: Read from `state/session.json` → `comfyui_url` (set by video-agent.bat at launch).
+Default: `http://127.0.0.1:8188`
 
 ## System
 

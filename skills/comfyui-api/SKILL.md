@@ -11,9 +11,12 @@ Connect to ComfyUI's REST API to execute workflows, monitor progress, and retrie
 
 ## Configuration
 
-- **Default URL**: `http://127.0.0.1:8188`
-- **Custom URL**: Set in project manifest or pass as parameter
+- **URL**: Read from `state/session.json` → `comfyui_url` field (set by video-agent.bat at launch)
+- **Instance**: Read from `state/session.json` → `active_instance` (e.g., "main", "experimental")
 - **Timeout**: 30s for API calls, no timeout for generation polling
+
+> Use the URL from `state/session.json` in all API calls below. Replace `http://127.0.0.1:8188`
+> with the actual `comfyui_url` value.
 
 ## Two Modes
 

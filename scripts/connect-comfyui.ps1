@@ -1,16 +1,67 @@
 # ComfyUI Connection Test
 # Tests connection to ComfyUI REST API and displays system info
 #
-# Usage: pwsh -File scripts/connect-comfyui.ps1 [-Url "http://127.0.0.1:8188"]
+# Usage:
+#   pwsh -File scripts/connect-comfyui.ps1
+#   pwsh -File scripts/connect-comfyui.ps1 -Instance main
+#   pwsh -File scripts/connect-comfyui.ps1 -Url "http://127.0.0.1:8189"
 
 param(
-    [string]$Url = "http://127.0.0.1:8188"
+    # Named instance from config/instances.json
+    [string]$Instance,
+
+    # Direct URL override (takes precedence over -Instance)
+    [string]$Url
 )
+
+$ErrorActionPreference = "Stop"
+
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
+$instancesConfig = Join-Path $repoRoot "config" "instances.json"
+
+# Resolve URL: -Url > -Instance > session.json > instances.json default > fallback
+if (-not $Url) {
+    if ($Instance) {
+        if (Test-Path $instancesConfig) {
+            $cfg = Get-Content $instancesConfig -Raw | ConvertFrom-Json
+            $inst = $cfg.instances.$Instance
+            if ($inst) {
+                $Url = $inst.url
+            } else {
+                Write-Host "[WARN] Instance '$Instance' not found in instances.json" -ForegroundColor Yellow
+            }
+        }
+    }
+
+    if (-not $Url) {
+        # Try session.json
+        $sessionFile = Join-Path $repoRoot "state" "session.json"
+        if (Test-Path $sessionFile) {
+            $session = Get-Content $sessionFile -Raw | ConvertFrom-Json
+            if ($session.comfyui_url) { $Url = $session.comfyui_url }
+        }
+    }
+
+    if (-not $Url) {
+        # Try instances.json default
+        if (Test-Path $instancesConfig) {
+            $cfg = Get-Content $instancesConfig -Raw | ConvertFrom-Json
+            $defInst = $cfg.default
+            if ($defInst -and $cfg.instances.$defInst) {
+                $Url = $cfg.instances.$defInst.url
+                if (-not $Instance) { $Instance = $defInst }
+            }
+        }
+    }
+
+    if (-not $Url) { $Url = "http://127.0.0.1:8188" }
+}
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "ComfyUI Connection Test" -ForegroundColor Cyan
 Write-Host "=======================" -ForegroundColor Cyan
+if ($Instance) { Write-Host "Instance: $Instance" }
 Write-Host "Target: $Url"
 Write-Host ""
 
@@ -77,7 +128,16 @@ try {
     Write-Host "  3. Firewall is blocking the connection"
     Write-Host ""
     Write-Host "To start ComfyUI:" -ForegroundColor Yellow
-    Write-Host '  cd C:\ComfyUI && python main.py --listen --highvram'
+    if ($Instance -and (Test-Path $instancesConfig)) {
+        $cfg = Get-Content $instancesConfig -Raw | ConvertFrom-Json
+        $inst = $cfg.instances.$Instance
+        if ($inst -and $inst.path) {
+            $flags = if ($inst.launch_flags) { $inst.launch_flags } else { "--listen" }
+            Write-Host "  cd '$($inst.path)' && python main.py --listen $flags"
+        }
+    } else {
+        Write-Host '  cd <ComfyUI-path> && python main.py --listen --highvram'
+    }
     Write-Host ""
     Write-Host "Error details: $($_.Exception.Message)" -ForegroundColor Red
     exit 1

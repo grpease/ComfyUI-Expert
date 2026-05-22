@@ -1,0 +1,18 @@
+{
+  "_comment": "Copy this file to instances.json and update with your actual paths and URLs.",
+  "default": "main",
+  "instances": {
+    "main": {
+      "url": "http://127.0.0.1:8188",
+      "path": "E:\\ComfyUI-Easy-Install\\ComfyUI",
+      "description": "Primary instance - FLUX + video models",
+      "launch_flags": "--highvram --fp8_e4m3fn-unet"
+    },
+    "experimental": {
+      "url": "http://127.0.0.1:8189",
+      "path": "E:\\ComfyUI-Experimental",
+      "description": "Experimental instance - different node/model set",
+      "launch_flags": "--highvram"
+    }
+  }
+}

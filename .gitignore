@@ -1,6 +1,10 @@
 # Runtime state (machine-specific)
 state/session.json
 state/inventory.json
+state/inventory-*.json
+
+# Instance configuration (machine-specific paths/URLs)
+config/instances.json
 
 # Project outputs (large/personal)
 projects/*/outputs/
