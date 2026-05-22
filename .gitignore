@@ -3,8 +3,12 @@ state/session.json
 state/inventory.json
 state/inventory-*.json
 
-# Instance configuration (machine-specific paths/URLs)
+# Machine-specific configuration (gitignored — edit these locally, never commit)
 config/instances.json
+config/hardware-profile.md
+
+# OpenClaw live config (copy from openclaw/openclaw.example.json)
+openclaw/openclaw.json
 
 # Project outputs (large/personal)
 projects/*/outputs/

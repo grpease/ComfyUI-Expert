@@ -48,23 +48,44 @@ video-agent.bat
 
 ## Quick Start
 
-### 1. Clone and launch
+### 1. Clone and configure
 
 ```cmd
 git clone https://github.com/MCKRUZ/ComfyUI-Expert.git
 cd ComfyUI-Expert
+```
+
+**Copy and customize local config files** (these are gitignored — safe to edit freely):
+
+```cmd
+REM ComfyUI instance URLs and paths (required for multi-instance support)
+copy config\instances.example.json config\instances.json
+
+REM Hardware profile for your GPU (created automatically by launcher too)
+copy config\hardware-profile.example.md config\hardware-profile.md
+```
+
+Edit `config\instances.json` to point at your ComfyUI installs, and `config\hardware-profile.md` to match your GPU.
+
+Then launch:
+
+```cmd
 video-agent.bat
 ```
 
-With options:
+The launcher also auto-creates `config\hardware-profile.md` on first run if it doesn't exist.
+
+### 2. Launch with options
 
 ```cmd
-video-agent.bat --project "my-video"          # Set active project
-video-agent.bat --comfyui "http://<remote-ip>:8188"  # Remote ComfyUI
-video-agent.bat --resume                       # Resume last session
+video-agent.bat                                         # Start a session
+video-agent.bat --instance experimental                 # Use a named instance
+video-agent.bat --project "my-video"                    # Set active project
+video-agent.bat --comfyui "http://<remote-ip>:8188"     # Override ComfyUI URL directly
+video-agent.bat --resume                                # Resume last session
 ```
 
-### 2. Scan your ComfyUI installation
+### 3. Scan your ComfyUI installation
 
 First time (or after installing new models/nodes), tell the agent:
 
@@ -72,9 +93,13 @@ First time (or after installing new models/nodes), tell the agent:
 Scan my ComfyUI installation at C:\ComfyUI
 ```
 
-Or run the script directly:
+Or run the script directly (use `-Instance` for named instances):
 
 ```powershell
+# Scan with a named instance (path resolved from config/instances.json)
+pwsh -File scripts/scan-inventory.ps1 -Instance main
+
+# Or with an explicit path
 pwsh -File scripts/scan-inventory.ps1 -ComfyUIPath "C:\ComfyUI"
 ```
 
@@ -258,18 +283,36 @@ Full specs and download links are in `references/models.md`.
 
 ## Hardware Profile
 
-VideoAgent is configured for an **RTX 5090 (32GB VRAM)** but works with any GPU. The agent adjusts recommendations based on available VRAM.
+VideoAgent reads hardware configuration from `config/hardware-profile.md` (your local, gitignored file). On first launch, the launcher auto-copies `config/hardware-profile.example.md` as a starting point — edit it to match your GPU.
 
-| Workload | 32GB Status | Notes |
-|----------|:-----------:|-------|
-| FLUX.1-dev FP16 | Native | No quantization needed |
-| Wan 2.2 14B | Native | Full quality |
-| FramePack | Overkill | Designed for 6GB |
-| PuLID Flux II | Native | Dual-character generation |
-| InfiniteYou | Native | Both SIM and AES variants |
-| LoRA Training (FLUX) | Native | No quantization needed |
+The agent uses your hardware profile to:
+- Recommend models that fit your VRAM budget
+- Set appropriate launch flags for ComfyUI
+- Suggest optimizations when you're near VRAM limits
 
-Recommended ComfyUI launch flags: `--highvram --fp8_e4m3fn-unet`
+The example profile (`config/hardware-profile.example.md`) is configured for an RTX 5090 (32GB), but the agent works with any GPU. It adjusts recommendations based on whatever VRAM you specify.
+
+| Workload | Min VRAM | Notes |
+|----------|:--------:|-------|
+| FLUX.1-dev FP16 | 24GB | |
+| Wan 2.2 14B | 24GB | Full quality |
+| FramePack | 6GB | VRAM-invariant |
+| PuLID Flux II | 24GB | Dual-character generation |
+| InfiniteYou | 24GB | Both SIM and AES variants |
+| LoRA Training (FLUX) | 24GB | |
+
+Full model requirements are in `references/models.md`.
+
+## Configuration Files
+
+These files live in `config/` and are **gitignored** — they are machine-specific and should never be committed. Use the `.example.*` files as templates.
+
+| File | Template | Purpose |
+|------|----------|---------|
+| `config/instances.json` | `config/instances.example.json` | Named ComfyUI instances (URLs, paths, launch flags) |
+| `config/hardware-profile.md` | `config/hardware-profile.example.md` | Your GPU model, VRAM, and recommended flags |
+
+`video-agent.bat` auto-creates `config/hardware-profile.md` on first launch. For `config/instances.json`, copy the example file manually and fill in your instance details.
 
 ## Project Structure
 
@@ -280,10 +323,16 @@ ComfyUI-Expert/
 |-- .claude/
 |   +-- settings.local.json     Project-local hooks & permissions
 |
+|-- config/                      Machine-specific config (gitignored actuals)
+|   |-- instances.example.json   Template: named ComfyUI instance definitions
+|   |-- instances.json           YOUR instances (gitignored — copy from example)
+|   |-- hardware-profile.example.md  Template: GPU specs (RTX 5090 reference)
+|   +-- hardware-profile.md      YOUR hardware (gitignored — auto-created by launcher)
+|
 |-- foundation/                  Tier 1: Quick reference (~2K tokens)
 |   |-- agent-persona.md         Communication style & principles
 |   |-- api-quick-ref.md         ComfyUI REST API cheat sheet
-|   |-- hardware-profile.md      GPU specs, VRAM capabilities
+|   |-- hardware-profile.md      Generic template (fallback if config/ version missing)
 |   |-- model-landscape.md       Top 3 models per category
 |   +-- skill-registry.md        Skill list & dependency map
 |

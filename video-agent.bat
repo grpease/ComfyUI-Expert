@@ -113,6 +113,30 @@ echo }
 
 REM Launch Claude Code in the VideoAgent directory
 cd /d "%REPO_DIR%"
+
+REM ----------------------------------------------------------------
+REM First-time setup: auto-copy example config files if missing
+REM ----------------------------------------------------------------
+set "HW_PROFILE=%REPO_DIR%\config\hardware-profile.md"
+set "HW_EXAMPLE=%REPO_DIR%\config\hardware-profile.example.md"
+if not exist "%HW_PROFILE%" (
+    if exist "%HW_EXAMPLE%" (
+        copy /Y "%HW_EXAMPLE%" "%HW_PROFILE%" >nul
+        echo  [SETUP] Created config\hardware-profile.md from example.
+        echo         Edit it to match your GPU before running workflows.
+        echo.
+    )
+)
+
+if not exist "%INSTANCES_JSON%" (
+    set "INST_EXAMPLE=%REPO_DIR%\config\instances.example.json"
+    if exist "!INST_EXAMPLE!" (
+        echo  [TIP] Copy config\instances.example.json to config\instances.json
+        echo        to configure named ComfyUI instances.
+        echo.
+    )
+)
+
 echo.
 echo  VideoAgent Session
 echo  ==================
@@ -121,11 +145,6 @@ if defined ACTIVE_PROJECT echo  Project:     %ACTIVE_PROJECT%
 if defined ACTIVE_INSTANCE echo  Instance:    %ACTIVE_INSTANCE%
 echo  ComfyUI:     %COMFYUI_URL%
 echo.
-if not exist "%INSTANCES_JSON%" (
-    echo  [TIP] Copy config\instances.example.json to config\instances.json
-    echo        to configure named ComfyUI instances.
-    echo.
-)
 
 claude %CLAUDE_ARGS%
 
